@@ -1,26 +1,67 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import Header from "./Header";
+import { checkValidation } from "../utils/validate";
+import { login, registerUser } from "../utils/functions/Users";
+import { useDispatch } from "react-redux";
+import { PiCopyrightFill } from "react-icons/pi";
+import { NETFLIC_BG } from "../utils/constants";
 
 export const Login = () => {
+  const dispatch = useDispatch();
+
   const [isLoginForm, setIsLoginForm] = useState(true);
-  const handleSubmit = (e) => {
+  const [errMessage, setErrMessage] = useState(null);
+  const [isSubmit, setIsSubmit] = useState(false);
+  const [showSpinner, setShoSpinner] = useState(false);
+  const name = useRef(null);
+  const email = useRef(null);
+  const password = useRef(null);
+  function handleSubmit(e) {
     e.preventDefault();
-  };
+
+    const msg = checkValidation(email.current.value, password.current.value);
+    setErrMessage(msg);
+    if (msg) return;
+    setIsSubmit(true);
+    setShoSpinner(true);
+    if (!isLoginForm) {
+      //Sign up
+      registerUser(
+        email.current.value,
+        password.current.value,
+        name.current.value,
+        setErrMessage,
+        dispatch,
+
+        setShoSpinner,
+        setIsSubmit
+      );
+    } else if (isLoginForm) {
+      //Sign in
+      login(
+        email.current.value,
+        password.current.value,
+        setErrMessage,
+        dispatch,
+
+        setShoSpinner,
+        setIsSubmit
+      );
+    }
+  }
   const toggalLogin = () => {
     setIsLoginForm(!isLoginForm);
+    setErrMessage(null);
+    setShoSpinner(false);
   };
   return (
     <div className="">
       <Header />
       <div className="bg-black">
-        <img
-          className="opacity-50"
-          src="https://assets.nflxext.com/ffe/siteui/vlv3/855ed6e2-d9f1-4afd-90da-96023ec747c3/85eb5b91-25ed-4965-ace9-ba8e4a0ead8d/IN-en-20230828-popsignuptwoweeks-perspective_alpha_website_large.jpg"
-          alt="background"
-        />
+        <img className="opacity-50" src={NETFLIC_BG} alt="background" />
         <form
-          onSubmit={handleSubmit}
-          className="bg-black absolute mx-auto top-1/3 right-0 left-0 w-3/12 text-white p-5 pb-20 bg-opacity-90 rounded-md"
+          onSubmit={(e) => handleSubmit(e)}
+          className="bg-black absolute mx-auto top-1/4 right-0 left-0 w-3/12 text-white p-6 pb-20 bg-opacity-80 rounded-md"
         >
           <h1 className="font-bold text-3xl py-4">
             {" "}
@@ -28,26 +69,39 @@ export const Login = () => {
           </h1>
           {!isLoginForm && (
             <input
+              ref={name}
               className="p-2 my-2 rounded-md w-full bg-gray-800"
               type="text"
-              placeholder="Enter name"
+              placeholder="Full name"
             />
           )}
           <input
+            ref={email}
             className="p-2 my-2 rounded-md w-full bg-gray-800"
             type="email"
+            required
             placeholder="Enter email"
           />
           <input
+            ref={password}
             className="p-2 my-2 rounded-md  w-full bg-slate-800"
             type="password"
+            required
             placeholder="Enter password"
           />
+          <p className="text-red-500 font-semibold">{errMessage}</p>
           <button
             className="p-2 my-6 rounded-md  w-full bg-red-700"
             type="submit"
+            disabled={isSubmit}
           >
-            {isLoginForm ? "Sign in" : "Sign up"}
+            {showSpinner ? (
+              <div className="ml-36 w-8 h-8 rounded-full border border-t-red-800 animate-spin"></div>
+            ) : isLoginForm ? (
+              "Sign in"
+            ) : (
+              "Sign up"
+            )}
           </button>
           <p onClick={toggalLogin} className="cursor-pointer">
             {" "}
@@ -56,6 +110,13 @@ export const Login = () => {
               : "Already have a user? Sign in now."}
           </p>
         </form>
+        <div className="bg-black h-52 w-full absolute left-0 right-0 top-[40.42rem] bg-opacity-60 flex justify-center">
+          <div className="text-slate-400 flex justify-center mb-11 items-center  gap-1">
+            <span>Copyright</span>
+            <PiCopyrightFill className="text-lg" />{" "}
+            <span>@sumitsen@gmail.com</span>
+          </div>
+        </div>
       </div>
     </div>
   );
